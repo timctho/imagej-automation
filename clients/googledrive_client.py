@@ -20,7 +20,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
 
 class GoogleDriveClient:
     def __init__(self) -> None:
-        self._tempdir = tempfile.TemporaryDirectory()
+        self._tempdir = tempfile.TemporaryDirectory(prefix='imagej-', dir='./temp')
         self._tempdir_path = Path(self._tempdir.name)
         logging.info(f'Create temp dir {self._tempdir}')
 
@@ -45,14 +45,16 @@ class GoogleDriveClient:
             # pylint: disable=maybe-no-member
             request = self._client.files().get_media(fileId=id)
             file_path = self._tempdir_path / name
-            fh = io.FileIO(file_path, mode='wb')
-            downloader = MediaIoBaseDownload(fh, request, chunksize=1024 * 1024)
+            logging.info(f'Download file {file_path}')
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request, chunksize=2 * 1024 * 1024)
             done = False
             while not done:
-                status, done = downloader.next_chunk(num_retries=5)
-                if status:
-                    logging.info(f'Download {int(status.progress() * 100)} / 100.')
+                status, done = downloader.next_chunk(num_retries=10)
+                logging.info(f'Download {int(status.progress() * 100)} / 100. {file_path}')
 
+            with open(file_path, 'wb') as f:
+                f.write(fh.getvalue())
         except HttpError as error:
             logging.error(F'An error occurred: {error}')
             return None
@@ -60,5 +62,6 @@ class GoogleDriveClient:
         return file_path
 
 
-    def close(self):
+    def __exit__(self):
         self._tempdir.cleanup()
+        logging.info(f'Cleanup temp directory {self._tempdir_path}')

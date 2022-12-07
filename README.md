@@ -1,5 +1,11 @@
 # imagej-automation
 
+
+## Setup
+```
+pip install -r requirements.txt
+```
+
 ## From local files
 ```
 python run.py --input_folder <path>

@@ -48,8 +48,8 @@ def run(ij_template, out_dir, file1, file2, client: GoogleDriveClient):
     else:
         file1 = client.download(file1['name'], file1['id'])
         file2 = client.download(file2['name'], file2['id'])
-        _run(ij_template, out_dir, file1, file2)
-        
+        if file1 and file2:
+            _run(ij_template, out_dir, file1, file2)
 
 
 def _run(ij_template, out_dir, file1, file2):
@@ -72,22 +72,28 @@ def _run(ij_template, out_dir, file1, file2):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     args = parse_args()
-    client = GoogleDriveClient()
 
     output_folder = Path(args.output_folder)        
     output_folder.mkdir(exist_ok=True)
 
-    files = get_files(Path(args.input_folder), client)
+    input_folder = Path(args.input_folder)
+    if not input_folder.exists():
+        client = GoogleDriveClient()
+    else:
+        client = None
+
+    files = get_files(input_folder, client)
     file_pairs = get_file_pairs(files)
 
-    tasks = []
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        for pair in file_pairs:
-            tasks.append(executor.submit(run, args.ij_template, output_folder, pair[0], pair[1], client))
+    for pair in file_pairs:
+        run(args.ij_template, output_folder, pair[0], pair[1], client)
 
-    for t in tasks:
-        t.result()
+    # tasks = []
+    # with ThreadPoolExecutor(max_workers=2) as executor:
+    #     for pair in file_pairs:
+    #         tasks.append(executor.submit(run, args.ij_template, output_folder, pair[0], pair[1], client))
 
-    client.close()
+    # for t in tasks:
+    #     t.result()
 
     
