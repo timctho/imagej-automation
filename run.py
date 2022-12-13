@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import cv2
 
 from pathlib import Path
 from argparse import ArgumentParser
@@ -42,29 +43,24 @@ def get_file_pairs(list_):
     return res
 
 
-def run(ij_template, out_dir, file1, file2, client: GoogleDriveClient):
+def run(out_dir, file1, file2, client: GoogleDriveClient):
     if isinstance(file1, Path) and isinstance(file2, Path):
-        _run(ij_template, out_dir, file1, file2)
+        _run(out_dir, file1, file2)
     else:
         file1 = client.download(file1['name'], file1['id'])
         file2 = client.download(file2['name'], file2['id'])
         if file1 and file2:
-            _run(ij_template, out_dir, file1, file2)
+            _run(out_dir, file1, file2)
 
 
-def _run(ij_template, out_dir, file1, file2):
-    command = [
-        args.ij_exe,
-        '--headless',
-        '--console',
-        '-macro',
-        ij_template,
-        f'{file1} {file2} {out_dir}'
-    ]
-
+def _run(out_dir, file1, file2):
     try:
-        subprocess.check_output(command)
-        logging.info(f'Process {ij_template} with {file1} and {file2}')
+        img1 = cv2.imread(str(file1.resolve()))
+        img2 = cv2.imread(str(file2.resolve()))
+        diff = img2 - img1
+        output_file = out_dir / f'Result-{file2.name}'
+        cv2.imwrite(str(output_file.resolve()), diff)
+        logging.info(f'Process {file1} and {file2}, output: {output_file}')
     except Exception as e:
         logging.error(e)
 
@@ -86,7 +82,7 @@ if __name__ == '__main__':
     file_pairs = get_file_pairs(files)
 
     for pair in file_pairs:
-        run(args.ij_template, output_folder, pair[0], pair[1], client)
+        run(output_folder, pair[0], pair[1], client)
 
     # tasks = []
     # with ThreadPoolExecutor(max_workers=2) as executor:
