@@ -17,12 +17,6 @@ def parse_args():
     parser.add_argument('--output_folder',
                         type=str,
                         default='./outputs')
-    parser.add_argument('--ij_exe',
-                        type=str,
-                        default='C:\\Users\\chetho\\Downloads\\fiji-win32\\Fiji.app\\ImageJ-win32.exe')
-    parser.add_argument('--ij_template',
-                        type=str,
-                        default='./templates/imagej_macro_template.ijm')
     return parser.parse_args()
 
 
@@ -57,10 +51,10 @@ def _run(out_dir, file1, file2):
     try:
         img1 = cv2.imread(str(file1.resolve()))
         img2 = cv2.imread(str(file2.resolve()))
-        diff = img2 - img1
-        output_file = out_dir / f'Result-{file2.name}'
+        diff = cv2.subtract(img2, img1)
+        output_file = out_dir / f'Result-{file2.stem}.png'
         cv2.imwrite(str(output_file.resolve()), diff)
-        logging.info(f'Process {file1} and {file2}, output: {output_file}')
+        logging.info(f'Process [{file1}] and [{file2}], output [{output_file}]')
     except Exception as e:
         logging.error(e)
 
@@ -87,9 +81,9 @@ if __name__ == '__main__':
     # tasks = []
     # with ThreadPoolExecutor(max_workers=2) as executor:
     #     for pair in file_pairs:
-    #         tasks.append(executor.submit(run, args.ij_template, output_folder, pair[0], pair[1], client))
+    #         tasks.append(executor.submit(run, output_folder, pair[0], pair[1], client))
 
     # for t in tasks:
-    #     t.result()
+        # t.result()
 
     

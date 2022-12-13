@@ -10,7 +10,6 @@ pip install -r requirements.txt
 ```
 python run.py --input_folder <path>
               --output_folder <path>
-              --ij_exe <imagej_exe_path>
 ```
 
 
@@ -18,7 +17,6 @@ python run.py --input_folder <path>
 ```
 python run.py --input_folder <google_drive_folder_id>
               --output_folder <path>
-              --ij_exe <imagej_exe_path>
 ```
 
 ```

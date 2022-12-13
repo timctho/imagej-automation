@@ -32,7 +32,7 @@ class GoogleDriveClient:
         items = []
 
         try:
-            results = self._client.files().list(q = "'" + str(id_) + "' in parents", pageSize=10, fields="nextPageToken, files(id, name)").execute()
+            results = self._client.files().list(q = "'" + str(id_) + "' in parents", pageSize=1000, fields="nextPageToken, files(id, name)").execute()
             items = results.get('files', [])
         except Exception as e:
             logging.error(e)
@@ -51,7 +51,7 @@ class GoogleDriveClient:
             done = False
             while not done:
                 status, done = downloader.next_chunk(num_retries=10)
-                logging.info(f'Download {int(status.progress() * 100)} / 100. {file_path}')
+                logging.info(f'Download {int(status.progress() * 100):>5} / 100. {file_path}')
 
             with open(file_path, 'wb') as f:
                 f.write(fh.getvalue())
